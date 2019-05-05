@@ -34,6 +34,18 @@
   height: 90% ;
 }
 
+.button-list > div  {
+  width:auto;
+  padding:3%;
+  display:inline-block;
+}
+
+.button-list > div > button {
+  width:auto;
+  height:5vh;
+  display:inline-block;
+}
+
 .player {
   border: 1px solid #908b85; 
   border-radius: 5px;
@@ -65,7 +77,6 @@
   width:100%;
   padding:3%;
   overflow: scroll;
-
 }
 
 .playlist > h1:hover { 
@@ -77,17 +88,7 @@
   font-size: 16px;
 }
 
-.button-list > div  {
-  width:auto;
-  padding:3%;
-  display:inline-block;
-}
 
-.button-list > div > button {
-  width:auto;
-  height:5vh;
-  display:inline-block;
-}
 
 
 
