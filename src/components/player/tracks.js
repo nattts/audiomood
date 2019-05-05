@@ -1,13 +1,19 @@
-import * as h from 'utils/helpers.js';
+import * as helper from 'utils/helpers.js';
 
 
-const getDivs = async data => {
- let batch = await h.divBatch(data, h.divBuilder);
- return batch;
+const getTrackElements = async data => {
+ try {
+  let batch = await helper.elementBatch(data, helper.createTrackElement);
+  return batch;
+ }
+ catch(e) { throw new Error ('error in getting track elements');}
 };
 
 export const display = async data => {
- let divsArr = await getDivs(data);
- return await h.attach(divsArr,'.playlist');
+ try {
+  let divsArr = await getTrackElements(data);
+  return await helper.attach(divsArr,'.playlist');
+ }
+ catch(e) { throw new Error ('error in displaying tracks');}
 };
 

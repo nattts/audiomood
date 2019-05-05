@@ -3,30 +3,27 @@
 }
 
 .header-container {
-  //background-color:red;
   padding: 2%;
   padding-left: 0%;
   width:100%
 }
 
+.audiomood {
+  padding-left: 3%;
+}
+
 .wrap {
-  //background-color: grey;
   padding: 3%;
   width:100%;
 }
 
 .c-left {
-/*  border: 2px solid #908b85;
-  border-radius: 5px; */
   height: 70vh;
-  padding: 5%;
   width:50%;
   float : left ;
 }
 
 .c-right {
-/*   border: 1px solid #908b85;
-  border-radius: 5px; */
   height: 70vh;
   padding: 5%;
   width:50%;
@@ -34,11 +31,8 @@
  }
 
  .inner-right{
-  border: 1px solid #908b85; 
-  border-radius: 5px;
   height: 90% ;
-   
- }
+}
 
 .player {
   border: 1px solid #908b85; 
@@ -48,50 +42,51 @@
 }
 
  audio {
-  display:block;
   width:100%;
+  display:block;
+  outline: none;
 }
 
 .head {
   width:100%;
-  //background-color: pink;
+  margin-top: 3%;
+}
+
+.genre-info {
+  border: 1px solid #908b85; 
+  border-radius: 5px;
+  height: 10%;
+  width:100%;
+  padding: 3%;
 }
 
 .playlist {
   height: 100%;
   width:100%;
-  //background-color: grey;
   padding:3%;
   overflow: scroll;
 
 }
-.playlist > div {
-  border: 1px solid #908b85; 
-  border-radius: 5px;
-  margin:1%;
-  height: 50px;
-  width:100%;
-}
 
-.playlist > div:hover { 
+.playlist > h1:hover { 
   background: #f2f2f2; 
 }
 
-.button-list > div  {
-  //background-color:pink;
-   width:auto;
-  padding:3%;
-  display:inline-block;
-
+.track {
+  font-weight: normal;
+  font-size: 16px;
 }
 
+.button-list > div  {
+  width:auto;
+  padding:3%;
+  display:inline-block;
+}
 
 .button-list > div > button {
-  //background-color:pink;
   width:auto;
   height:5vh;
   display:inline-block;
-
 }
 
 

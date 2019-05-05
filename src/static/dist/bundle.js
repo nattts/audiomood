@@ -9027,23 +9027,24 @@ var _index = require("components/index.js");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ee = void 0;
+exports.eventEmitter = void 0;
 
-var _helpers = require("utils/helpers.js");
+var _reset = require("components/player/reset.js");
 
 const events = require('events').EventEmitter;
 
-const ee = new events.EventEmitter();
-exports.ee = ee;
-ee.on('reset', async () => await (0, _helpers.reset)());
+const eventEmitter = new events.EventEmitter();
+exports.eventEmitter = eventEmitter;
+eventEmitter.on('resetPlaylist', async () => await (0, _reset.resetPlaylist)());
+eventEmitter.on('resetGenre', async () => await (0, _reset.resetGenre)());
 
-},{"events":331,"utils/helpers.js":346}],337:[function(require,module,exports){
+},{"components/player/reset.js":345,"events":331}],337:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.data = exports.fetcher = exports.createQuery = exports.getGenre = void 0;
+exports.data = void 0;
 
 var h = _interopRequireWildcard(require("utils/helpers.js"));
 
@@ -9055,28 +9056,32 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const json = require('components/moodbox/mood.json');
 
+//gets the genre according to the chosen mood
 const getGenre = async mood => {
-  const moodObj = await h.moodMap(json);
+  try {
+    const moodObj = await h.moodMap(json);
 
-  for (let m in moodObj) {
-    if (m === mood) {
-      return moodObj[m];
+    for (let m in moodObj) {
+      if (m === mood) {
+        return moodObj[m];
+      }
     }
+  } catch (e) {
+    throw new Error('error in creating query');
   }
 };
 
-exports.getGenre = getGenre;
-
 const createQuery = async e => {
-  const genre = await getGenre(e); //const count = 5;
+  try {
+    const genre = await getGenre(e);
+    const count = 10;
+    const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
+    return source;
+  } catch (e) {
+    throw new Error('error in creating query');
+  }
+}; //return a huge json from API request
 
-  const source = `https://api-v2.hearthis.at/categories/${genre}/`; //const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
-
-  return source;
-}; //return a huge json from API
-
-
-exports.createQuery = createQuery;
 
 const fetcher = async e => {
   try {
@@ -9086,25 +9091,35 @@ const fetcher = async e => {
   } catch (e) {
     throw new Error('error with fetching');
   }
-}; //return exactly 5 entries
+};
 
+const filterByNumber = async (e, number) => {
+  try {
+    const json = await fetcher(e);
+    return json.filter((x, i) => i < number);
+  } catch (e) {
+    throw new Error('error in filtering');
+  }
+}; //return exactly 7 entries
 
-exports.fetcher = fetcher;
 
 const data = async e => {
-  const json = await fetcher(e);
-  return json.filter((x, i) => i < 5).map(y => {
-    return {
+  try {
+    const entriesToFetch = 7;
+    const filtered = await filterByNumber(e, entriesToFetch);
+    return filtered.map(y => ({
       title: y.title,
       genre: y.genre,
       src: y.stream_url
-    };
-  });
+    }));
+  } catch (e) {
+    throw new Error('error in getting data');
+  }
 };
 
 exports.data = data;
 
-},{"components/moodbox/mood.json":342,"isomorphic-fetch":332,"utils/helpers.js":346}],338:[function(require,module,exports){
+},{"components/moodbox/mood.json":342,"isomorphic-fetch":332,"utils/helpers.js":348}],338:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9112,24 +9127,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.run = void 0;
 
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
-
 var _buttons = require("components/moodbox/buttons.js");
 
 var _choice = require("components/moodbox/choice.js");
 
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
-const run = async () => {
-  const buttons = await (0, _buttons.getButtons)();
-  const moodbox = await helper.attach(buttons, '.button-list');
-  await (0, _choice.choose)(moodbox);
-}; //ee.emit('reset', prop.preBuiltTrackContainer);
+const json = require('components/moodbox/mood.json');
 
+const run = async () => {
+  const buttons = await (0, _buttons.getButtons)(json);
+  const moodbox = await helper.attach(buttons, '.button-list');
+  await (0, _choice.chooseMood)(moodbox);
+};
 
 exports.run = run;
 
-},{"components/moodbox/buttons.js":339,"components/moodbox/choice.js":340,"utils/helpers.js":346}],339:[function(require,module,exports){
+},{"components/moodbox/buttons.js":339,"components/moodbox/choice.js":340,"components/moodbox/mood.json":342,"utils/helpers.js":348}],339:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9137,27 +9153,30 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getButtons = void 0;
 
-var h = _interopRequireWildcard(require("utils/helpers.js"));
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
-const json = require('./mood.json');
-
-const moods = async () => {
-  const moodObj = await h.moodMap(json);
-  return Object.keys(moodObj);
+//return array of moods from mood object parsed from json
+const moods = async json => {
+  try {
+    const moodObj = await helper.moodMap(json);
+    return Object.keys(moodObj);
+  } catch (e) {
+    throw new Error('error in getting array of moods');
+  }
 }; // return array of divs with button element inside
 
 
 const buildButtons = async moodsArr => {
   try {
-    return await h.divBatch(moodsArr, h.createButton);
+    return await helper.elementBatch(moodsArr, helper.createButton);
   } catch (e) {
     throw new Error('error in buildButtons');
   }
 };
 
-const getButtons = async () => {
+const getButtons = async json => {
   try {
     const moodsArray = await moods(json);
     return await buildButtons(moodsArray);
@@ -9168,13 +9187,13 @@ const getButtons = async () => {
 
 exports.getButtons = getButtons;
 
-},{"./mood.json":342,"utils/helpers.js":346}],340:[function(require,module,exports){
+},{"utils/helpers.js":348}],340:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.choose = void 0;
+exports.chooseMood = void 0;
 
 var _highlight = require("./highlight.js");
 
@@ -9187,26 +9206,28 @@ var _play = require("components/player/play.js");
 var _emitter = require("components/emitter");
 
 //choose the mood
-const choose = async divs => {
-  const parent = Array.from(divs.children);
+const chooseMood = async parentElement => {
+  const parent = Array.from(parentElement.children);
+  const yellow = '#ffdab3';
   parent.forEach(async x => {
     x.addEventListener('click', async e => {
-      await (0, _highlight.highlight)(e, parent);
+      await (0, _highlight.highlight)(e, parent, yellow);
       const mood = e.target.innerHTML;
-      const genres = await (0, _genres.data)(mood);
+      const tracks = await (0, _genres.data)(mood); //clearing previously displayed tracks if there were any
 
-      _emitter.ee.emit('reset'); //ee
+      _emitter.eventEmitter.emit('resetPlaylist');
 
+      _emitter.eventEmitter.emit('resetGenre');
 
-      const playlist = await (0, _tracks.display)(genres);
+      const playlist = await (0, _tracks.display)(tracks);
       await (0, _play.playTrack)(playlist);
     });
   });
 };
 
-exports.choose = choose;
+exports.chooseMood = chooseMood;
 
-},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/player/play.js":343,"components/player/tracks":345}],341:[function(require,module,exports){
+},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/player/play.js":344,"components/player/tracks":347}],341:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9214,10 +9235,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.highlight = void 0;
 
+//for button divs
 const traverseChildren = async htmlCollection => {
   const children = Array.from(htmlCollection.children);
   return children.map(x => x.style.backgroundColor = '');
-};
+}; //dehighlights before hightlight the new element
+
 
 const de_highlight = async parent => {
   return parent.map(async x => {
@@ -9229,11 +9252,9 @@ const de_highlight = async parent => {
   });
 };
 
-const highlight = async (e, parent) => {
-  const yellow = '#ffdab3';
-  const lightblue = '#e6f8fe';
+const highlight = async (e, parent, colour) => {
   await de_highlight(parent);
-  e.target.style.backgroundColor = lightblue;
+  e.target.style.backgroundColor = colour;
 };
 
 exports.highlight = highlight;
@@ -9242,17 +9263,37 @@ exports.highlight = highlight;
 module.exports={
  "nostalgic": "Blues",
  "romantic": "Jazz",
- "euphoric": "Trance",
+ "euphoric": "Breakbeat",
  "energetic": "Techno",
  "calm": "Ambient",
  "angry": "Industrial",
  "relaxed": "Acoustic",
  "happy": "Jungle",
  "focused": "House",
- "ecstatic": "Psytrance"
+ "ecstatic": "Psytrance",
+ "impulsive": "Disco",
+ "comfortable": "Classical"
 
 }
 },{}],343:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.genre_info = void 0;
+
+//takes genre info stored on the track element and 
+//displays currently played genre above the tracks
+const genre_info = async e => {
+  const genre_info = document.querySelector('.genre-info');
+  const genre = e.target.getAttribute('data-genre');
+  genre_info.innerHTML = genre;
+};
+
+exports.genre_info = genre_info;
+
+},{}],344:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9264,19 +9305,58 @@ var _highlight = require("components/moodbox/highlight.js");
 
 var _selectTrack = require("./selectTrack.js");
 
+var _genreInfo = require("./genreInfo.js");
+
+//current playlist div element is passed in.
 const playTrack = async playlistDiv => {
   const playlist = Array.from(playlistDiv.children);
+  const lightblue = '#e6f8fe'; //click event on every child
+
   playlist.forEach(x => {
     x.addEventListener('click', async e => {
       await (0, _selectTrack.selectTrack)(e);
-      await (0, _highlight.highlight)(e, playlist);
+      await (0, _highlight.highlight)(e, playlist, lightblue);
+      await (0, _genreInfo.genre_info)(e);
     });
   });
 };
 
 exports.playTrack = playTrack;
 
-},{"./selectTrack.js":344,"components/moodbox/highlight.js":341}],344:[function(require,module,exports){
+},{"./genreInfo.js":343,"./selectTrack.js":346,"components/moodbox/highlight.js":341}],345:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resetGenre = exports.resetPlaylist = void 0;
+
+const resetPlaylist = async () => {
+  try {
+    const playlist = document.querySelector('.playlist');
+
+    if (playlist.hasChildNodes()) {
+      Array.from(playlist.childNodes).forEach(item => item.parentNode.removeChild(item));
+    }
+  } catch (e) {
+    throw new Error('error in resetPlaylist');
+  }
+};
+
+exports.resetPlaylist = resetPlaylist;
+
+const resetGenre = async () => {
+  try {
+    const info = document.querySelector('.genre-info');
+    info.innerHTML = '';
+  } catch (e) {
+    throw new Error('error in resetting genre');
+  }
+};
+
+exports.resetGenre = resetGenre;
+
+},{}],346:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9284,6 +9364,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.selectTrack = void 0;
 
+//src is taken from the clicked element and passed to the audio element
+// to play the chosen track.
 const selectTrack = async e => {
   const audio = document.querySelector('.audio');
   let src = e.target.getAttribute('data-src');
@@ -9292,7 +9374,7 @@ const selectTrack = async e => {
 
 exports.selectTrack = selectTrack;
 
-},{}],345:[function(require,module,exports){
+},{}],347:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9300,59 +9382,67 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.display = void 0;
 
-var h = _interopRequireWildcard(require("utils/helpers.js"));
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
-const getDivs = async data => {
-  let batch = await h.divBatch(data, h.divBuilder);
-  return batch;
+const getTrackElements = async data => {
+  try {
+    let batch = await helper.elementBatch(data, helper.createTrackElement);
+    return batch;
+  } catch (e) {
+    throw new Error('error in getting track elements');
+  }
 };
 
 const display = async data => {
-  let divsArr = await getDivs(data);
-  return await h.attach(divsArr, '.playlist');
+  try {
+    let divsArr = await getTrackElements(data);
+    return await helper.attach(divsArr, '.playlist');
+  } catch (e) {
+    throw new Error('error in displaying tracks');
+  }
 };
 
 exports.display = display;
 
-},{"utils/helpers.js":346}],346:[function(require,module,exports){
+},{"utils/helpers.js":348}],348:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.reset = exports.getGenres = exports.getMoods = exports.moodMap = exports.attach = exports.divBatch = exports.createButton = exports.divBuilder = exports.parse = void 0;
+exports.getMoods = exports.moodMap = exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.parse = void 0;
 
 require("babel-polyfill");
 
-const parse = async json => JSON.parse(JSON.stringify(json)); //creates a single div with following attributes
+const parse = async json => JSON.parse(JSON.stringify(json)); //creates a single <h1></h1> with following attributes
 
 
 exports.parse = parse;
 
-const divBuilder = async obj => {
+const createTrackElement = async obj => {
   try {
     let {
       title,
       genre,
       src
     } = obj;
-    const div = document.createElement('div');
-    div.className = `${title}`;
-    div.innerHTML = `${genre}`;
-    div.setAttribute('data-src', `${src}`);
-    div.setAttribute('data-genre', `${genre}`);
-    div.setAttribute('style', 'background-color: ');
-    return div;
+    const h1 = document.createElement('h1');
+    h1.className = 'track';
+    h1.innerHTML = `${title}`;
+    h1.setAttribute('data-src', `${src}`);
+    h1.setAttribute('data-genre', `${genre}`);
+    h1.setAttribute('style', 'background-color: ');
+    return h1;
   } catch (e) {
-    throw new Error('error in divBuilder');
+    throw new Error('error in createTrackElement');
   }
 }; //creates a single button within a div
 // @param {name}: name of the genre
 
 
-exports.divBuilder = divBuilder;
+exports.createTrackElement = createTrackElement;
 
 const createButton = async name => {
   try {
@@ -9371,27 +9461,27 @@ const createButton = async name => {
 
 exports.createButton = createButton;
 
-const divBatch = async (arr, cb) => {
+const elementBatch = async (arr, cb) => {
   try {
     return Promise.all(arr.map(async x => {
       return await cb(x);
     }));
   } catch (e) {
-    throw new Error('error in divBatch');
+    throw new Error('error in elementBatch');
   }
 };
 
-exports.divBatch = divBatch;
+exports.elementBatch = elementBatch;
 
-const attach = async (divsArr, parentElement) => {
+const attach = async (elementsArr, parentElement) => {
   try {
     const parent = document.querySelector(`${parentElement}`);
-    divsArr.forEach(async x => {
-      parent.appendChild((await x));
+    elementsArr.forEach(async item => {
+      parent.appendChild((await item));
     });
     return parent;
   } catch (e) {
-    throw new Error('error in attaching');
+    throw new Error('error in attach');
   }
 };
 
@@ -9401,33 +9491,22 @@ const moodMap = async json => {
   try {
     return await parse(json);
   } catch (e) {
-    throw new Error('error in parseData');
+    throw new Error('error in moodMap');
   }
 }; //takes in js object of mood/genre
+//return array of moods
 
 
 exports.moodMap = moodMap;
 
 const getMoods = async moodMap => {
-  return Object.keys(moodMap);
-};
-
-exports.getMoods = getMoods;
-
-const getGenres = async moodMap => {
-  return Object.keys(moodMap);
-};
-
-exports.getGenres = getGenres;
-
-const reset = async () => {
-  const playlist = document.querySelector('.playlist');
-
-  if (playlist.hasChildNodes()) {
-    Array.from(playlist.childNodes).forEach(item => item.parentNode.removeChild(item));
+  try {
+    return Object.keys(moodMap);
+  } catch (e) {
+    throw new Error('error in get Moods');
   }
 };
 
-exports.reset = reset;
+exports.getMoods = getMoods;
 
 },{"babel-polyfill":1}]},{},[335]);

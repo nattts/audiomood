@@ -1,39 +1,39 @@
 import * as helper from 'utils/helpers'; 
 import 'jest-dom/extend-expect';
 
-describe('divBuilder()', () => {
+describe('createTrackElement()', () => {
 
-
+ const class_name = 'track';
  const obj = {
-  title:'universeaxiom',
+  title: 'title',
   src:'https://hearthis.at/dereference/dereference-usdnb-mix/listen/?s=sjO',
   genre: 'Drum and Bass'
  };
 
  test('return a DIV element', async () => {
   expect.assertions(1);
-  const actual = await helper.divBuilder(obj);
+  const actual = await helper.createTrackElement(obj);
   expect(actual).toBeInstanceOf(HTMLElement);
  });
   
  test('checks if class value is assigned to the element', async () => {
-  const actual = await helper.divBuilder(obj); 
-  expect(actual).toHaveClass(obj.title);
+  const actual = await helper.createTrackElement(obj); 
+  expect(actual).toHaveClass(class_name);
  });
 
  test('checks if genre attribute and a value is assigned to the element', async () => {
-  const actual = await helper.divBuilder(obj); 
+  const actual = await helper.createTrackElement(obj); 
   expect(actual).toHaveAttribute('data-genre', obj.genre);
  });
 
  test('checks if src attribute and a value is assigned to the element', async () => {
-  const actual = await helper.divBuilder(obj); 
+  const actual = await helper.createTrackElement(obj); 
   expect(actual).toHaveAttribute('data-src', obj.src);
  });
 });
 
 
-describe('divBatch()', () => {
+describe('elementBatch()', () => {
  const mockCB = jest.fn();
  const genre = 'Drum and Bass';
  const src = 'https://hearthis.at/dereference/dereference-usdnb-mix/listen/?s=sjO';
@@ -50,14 +50,14 @@ describe('divBatch()', () => {
  test('checks if a callback is called', async () => {
   expect.assertions(1);
  
-  const actual = await helper.divBatch(arr, mockCB);
+  const actual = await helper.elementBatch(arr, mockCB);
   expect(mockCB).toBeCalled();
  });
 
  test('checks if the return value is an array', async () => {
   expect.assertions(1);
 
-  const actual = await helper.divBatch(arr, mockCB);
+  const actual = await helper.elementBatch(arr, mockCB);
   expect(actual).toBeInstanceOf(Array) ;
  });
 
@@ -72,7 +72,7 @@ describe('parse()', () => {
   {
    nostalgic:'Blues',
    romantic:'Jazz',
-   euphoric:'Trance', 
+   euphoric:'Breakbeat', 
    energetic:'Techno',
    calm:'Ambient',
    angry:'Industrial',

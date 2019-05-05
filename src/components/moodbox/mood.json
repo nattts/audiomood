@@ -1,13 +1,15 @@
 {
  "nostalgic": "Blues",
  "romantic": "Jazz",
- "euphoric": "Trance",
+ "euphoric": "Breakbeat",
  "energetic": "Techno",
  "calm": "Ambient",
  "angry": "Industrial",
  "relaxed": "Acoustic",
  "happy": "Jungle",
  "focused": "House",
- "ecstatic": "Psytrance"
+ "ecstatic": "Psytrance",
+ "impulsive": "Disco",
+ "comfortable": "Classical"
 
 }

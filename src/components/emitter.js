@@ -1,8 +1,11 @@
 const events = require('events').EventEmitter;
-export const ee = new events.EventEmitter();
+export const eventEmitter = new events.EventEmitter();
 
 
-import { reset } from 'utils/helpers.js';
+import { resetPlaylist, resetGenre  } from 'components/player/reset.js';
 
 
-ee.on('reset', async () => await reset());
+
+eventEmitter.on('resetPlaylist', async () => await resetPlaylist());
+
+eventEmitter.on('resetGenre', async () => await resetGenre());
