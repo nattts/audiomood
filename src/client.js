@@ -1,3 +1,6 @@
-import { create }  from 'client/button.js';
+import { run } from 'components/index.js';
 
-console.log(create());
+run();
+
+
+
