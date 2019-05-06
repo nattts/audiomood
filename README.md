@@ -10,8 +10,7 @@ A basic app that plays music to choose music according to the chosen mood.
 
 1.`git clone https://github.com/nattts/audiomood.git`
 
-2. if you prefer to run the server with the port of your choice, then in the project directory open file .env and set up the port:
-
+2.if you prefer to run the server with the port of your choice, then in the project directory open file .env and set up the port:
 PORT=<your port>
 
 otherwise the default 7000 port will be used.
