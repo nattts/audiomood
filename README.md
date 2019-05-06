@@ -4,7 +4,7 @@
 
 A basic app that allows to play music according to the chosen mood.
 
- A user is presented with the player and dynamically created buttons with different moods. When a particular mood is chosen the first 7 tracks will be listed in the player. The auto play is not on, therefore to play the track it is has to be selected first.
+ A user is presented with the player and dynamically created buttons with different moods. When a particular mood is chosen the first 7 tracks will be listed in the player. The auto play is not on, therefore in order to play the track it has to be selected first.
 
 ## to get started
 1. `git clone https://github.com/nattts/audiomood.git`
