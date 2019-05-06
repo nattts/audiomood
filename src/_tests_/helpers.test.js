@@ -1,5 +1,29 @@
 import * as helper from 'utils/helpers'; 
 import 'jest-dom/extend-expect';
+//expect.extend({toBeInTheDocument, toHaveClass})
+
+describe('parse()', () => {
+ test('return parsed JSON object', async () => {
+  const jfile = require('components/moodbox/mood.json');
+  const actual = await helper.parse(jfile);
+  const expected = 
+  {
+   nostalgic:'Blues',
+   romantic:'Jazz',
+   euphoric:'Breakbeat', 
+   energetic:'Techno',
+   calm:'Ambient',
+   angry:'Industrial',
+   relaxed:'Acoustic',
+   happy:'Jungle',
+   focused:'House',
+   ecstatic:'Psytrance'
+  };
+ 
+  expect(actual).toMatchObject(expected) ;
+
+ });
+});
 
 describe('createTrackElement()', () => {
 
@@ -10,7 +34,7 @@ describe('createTrackElement()', () => {
   genre: 'Drum and Bass'
  };
 
- test('return a DIV element', async () => {
+ test('return a <h1></h1> element', async () => {
   expect.assertions(1);
   const actual = await helper.createTrackElement(obj);
   expect(actual).toBeInstanceOf(HTMLElement);
@@ -62,34 +86,4 @@ describe('elementBatch()', () => {
  });
 
 });
-
-
-describe('parse()', () => {
- test('return parsed JSON object', async () => {
-  const jfile = require('components/moodbox/mood.json');
-  const actual = await helper.parse(jfile);
-  const expected = 
-  {
-   nostalgic:'Blues',
-   romantic:'Jazz',
-   euphoric:'Breakbeat', 
-   energetic:'Techno',
-   calm:'Ambient',
-   angry:'Industrial',
-   relaxed:'Acoustic',
-   happy:'Jungle',
-   focused:'House',
-   ecstatic:'Psytrance'
-  };
- 
-  expect(actual).toMatchObject(expected) ;
-
- });
-});
-
-
-
-
-
-
 

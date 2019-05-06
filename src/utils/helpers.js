@@ -2,7 +2,9 @@ import 'babel-polyfill';
 
 export const parse = async json => JSON.parse(JSON.stringify(json));
 
-//creates a single <h1></h1> with following attributes
+/**
+creates a single <h1></h1> with following attributes
+*/
 export const createTrackElement = async obj => {
 
  try {
@@ -19,8 +21,13 @@ export const createTrackElement = async obj => {
  catch(e) { throw new Error ('error in createTrackElement');}
 };
 
-//creates a single button within a div
-// @param {name}: name of the genre
+
+
+/**
+ creates a single button within a div
+ @param {name}: name of the genre
+*/
+
 export const createButton = async name => {
  try {
   const div = document.createElement('div');
@@ -34,6 +41,8 @@ export const createButton = async name => {
  catch(e) { throw new Error ('error in createButton');}
 };
 
+
+
 //returns array of divs
 export const elementBatch = async(arr, cb) => {
  try {
@@ -44,6 +53,9 @@ export const elementBatch = async(arr, cb) => {
  catch(e) { throw new Error ('error in elementBatch');}
 };
 
+
+
+//to attach elements to the paren element in the DOM
 export const attach = async (elementsArr, parentElement) => {
  try {
   const parent = document.querySelector(`${parentElement}`);
@@ -53,23 +65,6 @@ export const attach = async (elementsArr, parentElement) => {
   return parent;
  }
  catch(e) { throw new Error ('error in attach');}
-};
-
-export const moodMap = async json => {
- try {
-  return await parse(json);
- }
- catch(e) { throw new Error ('error in moodMap');}
-};
-
-
-//takes in js object of mood/genre
-//return array of moods
-export const getMoods = async moodMap => {
- try {
-  return Object.keys(moodMap);
- }
- catch(e) { throw new Error ('error in get Moods');}
 };
 
 

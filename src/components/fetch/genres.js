@@ -1,22 +1,22 @@
 const json = require('components/moodbox/mood.json');
-import * as h from 'utils/helpers.js';
+import * as helper from 'utils/helpers.js';
 import fetch from 'isomorphic-fetch';
 
 //gets the genre according to the chosen mood
-const getGenre = async mood => {
+export const getGenre = async mood => {
  try {
-  const moodObj = await h.moodMap(json);
+  const moodObj = await helper.parse(json);
   for (let m in moodObj) {
    if (m === mood) {
     return moodObj[m];
    }
   }
  }
- catch(e){ throw new Error('error in creating query');}
+ catch(e){ throw new Error('error in getting genre');}
 };
 
 
-const createQuery = async e => {
+export const createQuery = async e => {
  try {
   const genre = await getGenre(e);
   const count = 10;

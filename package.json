@@ -2,7 +2,7 @@
   "name": "moodcloud",
   "version": "1.0.0",
   "main": "src/server.js",
-  "repository": "https://github.com/nattts/moodcloud.git",
+  "repository": "https://github.com/nattts/audiomood.git",
   "license": "MIT",
   "scripts": {
     "serve": "cross-env NODE_PATH=src node src/server.js",

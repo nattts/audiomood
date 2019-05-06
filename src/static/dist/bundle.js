@@ -9044,9 +9044,9 @@ eventEmitter.on('resetGenre', async () => await (0, _reset.resetGenre)());
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.data = void 0;
+exports.data = exports.createQuery = exports.getGenre = void 0;
 
-var h = _interopRequireWildcard(require("utils/helpers.js"));
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
 var _isomorphicFetch = _interopRequireDefault(require("isomorphic-fetch"));
 
@@ -9059,7 +9059,7 @@ const json = require('components/moodbox/mood.json');
 //gets the genre according to the chosen mood
 const getGenre = async mood => {
   try {
-    const moodObj = await h.moodMap(json);
+    const moodObj = await helper.parse(json);
 
     for (let m in moodObj) {
       if (m === mood) {
@@ -9067,9 +9067,11 @@ const getGenre = async mood => {
       }
     }
   } catch (e) {
-    throw new Error('error in creating query');
+    throw new Error('error in getting genre');
   }
 };
+
+exports.getGenre = getGenre;
 
 const createQuery = async e => {
   try {
@@ -9082,6 +9084,8 @@ const createQuery = async e => {
   }
 }; //return a huge json from API request
 
+
+exports.createQuery = createQuery;
 
 const fetcher = async e => {
   try {
@@ -9160,26 +9164,24 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 //return array of moods from mood object parsed from json
 const moods = async json => {
   try {
-    const moodObj = await helper.moodMap(json);
+    const moodObj = await helper.parse(json);
     return Object.keys(moodObj);
   } catch (e) {
     throw new Error('error in getting array of moods');
   }
-}; // return array of divs with button element inside
-
-
-const buildButtons = async moodsArr => {
-  try {
-    return await helper.elementBatch(moodsArr, helper.createButton);
-  } catch (e) {
-    throw new Error('error in buildButtons');
-  }
 };
+/**
+
+takes in JSON with mood/genre pairs, creates array from moods,
+which gets passed to Batch and return an array of created HTML elements
+
+*/
+
 
 const getButtons = async json => {
   try {
     const moodsArray = await moods(json);
-    return await buildButtons(moodsArray);
+    return await helper.elementBatch(moodsArray, helper.createButton);
   } catch (e) {
     throw new Error('error in getdButtons');
   }
@@ -9412,11 +9414,14 @@ exports.display = display;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getMoods = exports.moodMap = exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.parse = void 0;
+exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.parse = void 0;
 
 require("babel-polyfill");
 
-const parse = async json => JSON.parse(JSON.stringify(json)); //creates a single <h1></h1> with following attributes
+const parse = async json => JSON.parse(JSON.stringify(json));
+/**
+creates a single <h1></h1> with following attributes
+*/
 
 
 exports.parse = parse;
@@ -9438,8 +9443,11 @@ const createTrackElement = async obj => {
   } catch (e) {
     throw new Error('error in createTrackElement');
   }
-}; //creates a single button within a div
-// @param {name}: name of the genre
+};
+/**
+ creates a single button within a div
+ @param {name}: name of the genre
+*/
 
 
 exports.createTrackElement = createTrackElement;
@@ -9469,7 +9477,8 @@ const elementBatch = async (arr, cb) => {
   } catch (e) {
     throw new Error('error in elementBatch');
   }
-};
+}; //to attach elements to the paren element in the DOM
+
 
 exports.elementBatch = elementBatch;
 
@@ -9486,27 +9495,5 @@ const attach = async (elementsArr, parentElement) => {
 };
 
 exports.attach = attach;
-
-const moodMap = async json => {
-  try {
-    return await parse(json);
-  } catch (e) {
-    throw new Error('error in moodMap');
-  }
-}; //takes in js object of mood/genre
-//return array of moods
-
-
-exports.moodMap = moodMap;
-
-const getMoods = async moodMap => {
-  try {
-    return Object.keys(moodMap);
-  } catch (e) {
-    throw new Error('error in get Moods');
-  }
-};
-
-exports.getMoods = getMoods;
 
 },{"babel-polyfill":1}]},{},[335]);
