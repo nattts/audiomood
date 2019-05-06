@@ -8,15 +8,14 @@ A basic app that allows to play music according to the chosen mood.
 
 ## to get started
 
-1.`git clone https://github.com/nattts/audiomood.git`
+1. `git clone https://github.com/nattts/audiomood.git`
 
 2.if you prefer to run the server with the port of your choice, then in the project directory open file .env and set up the port:
 PORT=your port
 
 otherwise the default 7000 port will be used.
 
-3.`yarn serve`
-
+3. `yarn serve`
 4. go to `http://localhost:7000/` or `http://localhost:{your port}/`
 
 ## to run some tests
