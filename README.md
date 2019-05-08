@@ -15,7 +15,7 @@ PORT=your port
 
 otherwise the default 7000 port will be used.
 
-3.`yarn serve`
+3.`yarn serve` 
 
 4. go to `http://localhost:7000/` or `http://localhost:{your port}/`
 
