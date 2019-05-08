@@ -16,40 +16,33 @@
     <title> audiomood </title>
   </head>
   <body>
-    
-    <div class="container">
-      <div class="header-container">
-        <div class="header-inner"><h1 class="audiomood"> audiomood </h1></div>
-      </div>
   
-      <div class="wrap"> 
-            <div class="c-left">
-              <div class="player">
-                  <div class="head"> 
-                    <audio controls class="audio">
-                    <source src=" " type="audio/mpeg">
-                    </audio>
-                  </div>
-                  <div class="genre-info"></div>
-                  <div class="playlist">
+<div class="container">
 
-                  </div>
-              </div>
-            </div>
+  <div class="row row-one">
+    <div class="col header-inner"><h1 class="audiomood"> audiomood </h1></div>
+   </div>
+  
+  <div class="row row-two">
+      <div class="col-6 c-left">
 
-           
-            <div class="c-right">
-              <div class="inner-right">
-                <div class="button-list">
-                
-                </div>
-              </div>
-            </div>
-      <div style="clear: both;" ></div>      
+        <div class="player">
+          <audio controls class="audio">
+            <source src=" " type="audio/mpeg">
+          </audio>
+          <div class="genre-info"></div>
+          <div class="playlist"></div>  
+        </div>
+  
       </div>
-    </div>
+
+      <div class="col-6 c-right">
+        <div class="button-list"></div>
+      </div>
+  </div>
 
 
+</div>   
 
     
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

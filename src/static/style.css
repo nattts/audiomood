@@ -1,92 +1,80 @@
-.container {
-  height: 100vh;
-}
 
-.header-container {
-  padding: 2%;
-  padding-left: 0%;
-  width:100%
+.player{
+  border: 1px solid #908b85; 
+  border-radius: 5px;
 }
 
 .audiomood {
-  padding-left: 3%;
+  font-size:5vw;
 }
 
-.wrap {
-  padding: 3%;
-  width:100%;
+.row-one {
+  height: 100px;
+  margin:5px;
+  padding:25px;
 }
 
-.c-left {
-  height: 70vh;
-  width:50%;
-  float : left ;
+.row-two {
+  height: 400px;
+  margin:20px;
+  padding:20px;
 }
 
-.c-right {
-  height: 70vh;
-  padding: 5%;
-  width:50%;
-  float : left ;
+.c-left, .c-right {
+  padding:20px;
+  height:100%;
  }
 
- .inner-right{
-  height: 90% ;
-}
-
-.button-list > div  {
-  width:auto;
-  padding:3%;
-  display:inline-block;
-}
-
-.button-list > div > button {
-  width:auto;
-  height:5vh;
-  display:inline-block;
-}
-
 .player {
-  border: 1px solid #908b85; 
-  border-radius: 5px;
-  height: 90% ;
-  overflow:hidden;
-}
-
- audio {
-  width:100%;
-  display:block;
-  outline: none;
-}
-
-.head {
-  width:100%;
-  margin-top: 3%;
-}
+ height:100%;
+ width:auto;
+ 
+} 
 
 .genre-info {
+  height: 30px;
+  margin:10px;
   border: 1px solid #908b85; 
   border-radius: 5px;
-  height: 10%;
-  width:100%;
-  padding: 3%;
 }
 
 .playlist {
-  height: 100%;
-  width:100%;
-  padding:3%;
   overflow: scroll;
+  width:auto;
+  height:200px;
+  margin:10px;
 }
 
 .playlist > h1:hover { 
   background: #f2f2f2; 
 }
 
-.track {
-  font-weight: normal;
-  font-size: 16px;
+audio {
+ width:100%;
+ outline: none;
+ padding:5px;
 }
+
+.track {
+  font-size:2vw;
+  margin:2px;
+}
+
+.button-list {
+  height: 100%;
+  width:auto;
+  overflow: scroll;
+}
+
+.button-list > div {
+  display: inline;
+}
+
+.button-list > div > button {
+  margin:5px;
+}
+
+
 
 
 
