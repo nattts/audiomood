@@ -5,7 +5,7 @@
   "repository": "https://github.com/nattts/audiomood.git",
   "license": "MIT",
   "scripts": {
-    "serve": "cross-env NODE_PATH=src node src/server.js",
+    "start": "cross-env NODE_PATH=src node src/server.js",
     "dev": "cross-env NODE_PATH=src nodemon -e js,css,html,json,mjs",
     "build": "cross-env NODE_PATH=src browserify src/client.js -o src/static/dist/bundle.js",
     "change-watch": "cross-env NODE_PATH=src watchify src/client.js -o src/static/dist/bundle.js",
