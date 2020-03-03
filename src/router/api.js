@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 router.get('/', async (req, res, next) => {
- try {
-  res.sendFile('index.html');
- } catch (err) {
-  return next(err);
- }
+	try {
+		res.sendFile('index.html');
+	} catch (err) {
+		return next(err);
+	}
 
 });
 

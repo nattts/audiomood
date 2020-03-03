@@ -8,7 +8,7 @@
     "start": "cross-env NODE_PATH=src node src/server.js",
     "dev": "cross-env NODE_PATH=src nodemon -e js,css,html,json,mjs",
     "build": "cross-env NODE_PATH=src browserify src/client.js -o src/static/dist/bundle.js",
-    "change-watch": "cross-env NODE_PATH=src watchify src/client.js -o src/static/dist/bundle.js",
+    "change-watch": "cross-env NODE_PATH=src watchify src/client.js -o src/static/dist/bundle.js -v",
     "test": "cross-env NODE_PATH=src jest  --no-cache",
     "test-watch": "cross-env NODE_PATH=src jest _tests_ --watch"
   },
@@ -58,6 +58,9 @@
     "@babel/core": "^7.4.4",
     "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.4.4",
-    "babel-jest": "^24.7.1"
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^24.7.1",
+    "eslint": "^6.8.0",
+    "eslint-plugin-node": "^11.0.0"
   }
 }

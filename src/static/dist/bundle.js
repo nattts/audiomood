@@ -651,7 +651,7 @@ module.exports = function (NAME, wrapper, methods, common, IS_MAP, IS_WEAK) {
 };
 
 },{"./_an-instance":7,"./_export":34,"./_fails":36,"./_for-of":40,"./_global":42,"./_inherit-if-required":47,"./_is-object":53,"./_iter-detect":58,"./_meta":67,"./_redefine":93,"./_redefine-all":92,"./_set-to-string-tag":102}],24:[function(require,module,exports){
-var core = module.exports = { version: '2.6.5' };
+var core = module.exports = { version: '2.6.11' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 },{}],25:[function(require,module,exports){
@@ -1539,6 +1539,7 @@ module.exports.f = function (C) {
 },{"./_a-function":3}],71:[function(require,module,exports){
 'use strict';
 // 19.1.2.1 Object.assign(target, source, ...)
+var DESCRIPTORS = require('./_descriptors');
 var getKeys = require('./_object-keys');
 var gOPS = require('./_object-gops');
 var pIE = require('./_object-pie');
@@ -1568,11 +1569,14 @@ module.exports = !$assign || require('./_fails')(function () {
     var length = keys.length;
     var j = 0;
     var key;
-    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+    while (length > j) {
+      key = keys[j++];
+      if (!DESCRIPTORS || isEnum.call(S, key)) T[key] = S[key];
+    }
   } return T;
 } : $assign;
 
-},{"./_fails":36,"./_iobject":49,"./_object-gops":79,"./_object-keys":82,"./_object-pie":83,"./_to-object":120}],72:[function(require,module,exports){
+},{"./_descriptors":30,"./_fails":36,"./_iobject":49,"./_object-gops":79,"./_object-keys":82,"./_object-pie":83,"./_to-object":120}],72:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject = require('./_an-object');
 var dPs = require('./_object-dps');
@@ -1769,6 +1773,7 @@ module.exports = function (KEY, exec) {
 };
 
 },{"./_core":24,"./_export":34,"./_fails":36}],85:[function(require,module,exports){
+var DESCRIPTORS = require('./_descriptors');
 var getKeys = require('./_object-keys');
 var toIObject = require('./_to-iobject');
 var isEnum = require('./_object-pie').f;
@@ -1780,13 +1785,17 @@ module.exports = function (isEntries) {
     var i = 0;
     var result = [];
     var key;
-    while (length > i) if (isEnum.call(O, key = keys[i++])) {
-      result.push(isEntries ? [key, O[key]] : O[key]);
-    } return result;
+    while (length > i) {
+      key = keys[i++];
+      if (!DESCRIPTORS || isEnum.call(O, key)) {
+        result.push(isEntries ? [key, O[key]] : O[key]);
+      }
+    }
+    return result;
   };
 };
 
-},{"./_object-keys":82,"./_object-pie":83,"./_to-iobject":118}],86:[function(require,module,exports){
+},{"./_descriptors":30,"./_object-keys":82,"./_object-pie":83,"./_to-iobject":118}],86:[function(require,module,exports){
 // all object keys, includes non-enumerable and symbols
 var gOPN = require('./_object-gopn');
 var gOPS = require('./_object-gops');
@@ -5647,12 +5656,14 @@ var enumKeys = require('./_enum-keys');
 var isArray = require('./_is-array');
 var anObject = require('./_an-object');
 var isObject = require('./_is-object');
+var toObject = require('./_to-object');
 var toIObject = require('./_to-iobject');
 var toPrimitive = require('./_to-primitive');
 var createDesc = require('./_property-desc');
 var _create = require('./_object-create');
 var gOPNExt = require('./_object-gopn-ext');
 var $GOPD = require('./_object-gopd');
+var $GOPS = require('./_object-gops');
 var $DP = require('./_object-dp');
 var $keys = require('./_object-keys');
 var gOPD = $GOPD.f;
@@ -5669,7 +5680,7 @@ var SymbolRegistry = shared('symbol-registry');
 var AllSymbols = shared('symbols');
 var OPSymbols = shared('op-symbols');
 var ObjectProto = Object[PROTOTYPE];
-var USE_NATIVE = typeof $Symbol == 'function';
+var USE_NATIVE = typeof $Symbol == 'function' && !!$GOPS.f;
 var QObject = global.QObject;
 // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 var setter = !QObject || !QObject[PROTOTYPE] || !QObject[PROTOTYPE].findChild;
@@ -5779,7 +5790,7 @@ if (!USE_NATIVE) {
   $DP.f = $defineProperty;
   require('./_object-gopn').f = gOPNExt.f = $getOwnPropertyNames;
   require('./_object-pie').f = $propertyIsEnumerable;
-  require('./_object-gops').f = $getOwnPropertySymbols;
+  $GOPS.f = $getOwnPropertySymbols;
 
   if (DESCRIPTORS && !require('./_library')) {
     redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
@@ -5830,6 +5841,16 @@ $export($export.S + $export.F * !USE_NATIVE, 'Object', {
   getOwnPropertySymbols: $getOwnPropertySymbols
 });
 
+// Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
+// https://bugs.chromium.org/p/v8/issues/detail?id=3443
+var FAILS_ON_PRIMITIVES = $fails(function () { $GOPS.f(1); });
+
+$export($export.S + $export.F * FAILS_ON_PRIMITIVES, 'Object', {
+  getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+    return $GOPS.f(toObject(it));
+  }
+});
+
 // 24.3.2 JSON.stringify(value [, replacer [, space]])
 $JSON && $export($export.S + $export.F * (!USE_NATIVE || $fails(function () {
   var S = $Symbol();
@@ -5863,7 +5884,7 @@ setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
 
-},{"./_an-object":8,"./_descriptors":30,"./_enum-keys":33,"./_export":34,"./_fails":36,"./_global":42,"./_has":43,"./_hide":44,"./_is-array":51,"./_is-object":53,"./_library":61,"./_meta":67,"./_object-create":72,"./_object-dp":73,"./_object-gopd":76,"./_object-gopn":78,"./_object-gopn-ext":77,"./_object-gops":79,"./_object-keys":82,"./_object-pie":83,"./_property-desc":91,"./_redefine":93,"./_set-to-string-tag":102,"./_shared":104,"./_to-iobject":118,"./_to-primitive":121,"./_uid":125,"./_wks":130,"./_wks-define":128,"./_wks-ext":129}],258:[function(require,module,exports){
+},{"./_an-object":8,"./_descriptors":30,"./_enum-keys":33,"./_export":34,"./_fails":36,"./_global":42,"./_has":43,"./_hide":44,"./_is-array":51,"./_is-object":53,"./_library":61,"./_meta":67,"./_object-create":72,"./_object-dp":73,"./_object-gopd":76,"./_object-gopn":78,"./_object-gopn-ext":77,"./_object-gops":79,"./_object-keys":82,"./_object-pie":83,"./_property-desc":91,"./_redefine":93,"./_set-to-string-tag":102,"./_shared":104,"./_to-iobject":118,"./_to-object":120,"./_to-primitive":121,"./_uid":125,"./_wks":130,"./_wks-define":128,"./_wks-ext":129}],258:[function(require,module,exports){
 'use strict';
 var $export = require('./_export');
 var $typed = require('./_typed');
@@ -9052,7 +9073,9 @@ var _isomorphicFetch = _interopRequireDefault(require("isomorphic-fetch"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 const json = require('components/moodbox/mood.json');
 
@@ -9137,13 +9160,16 @@ var _choice = require("components/moodbox/choice.js");
 
 var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 const json = require('components/moodbox/mood.json');
 
 const run = async () => {
   const buttons = await (0, _buttons.getButtons)(json);
   const moodbox = await helper.attach(buttons, '.button-list');
+  await (0, _choice.defaultPlay)();
   await (0, _choice.chooseMood)(moodbox);
 };
 
@@ -9159,7 +9185,9 @@ exports.getButtons = void 0;
 
 var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 //return array of moods from mood object parsed from json
 const moods = async json => {
@@ -9195,7 +9223,7 @@ exports.getButtons = getButtons;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.chooseMood = void 0;
+exports.defaultPlay = exports.chooseMood = void 0;
 
 var _highlight = require("./highlight.js");
 
@@ -9229,6 +9257,14 @@ const chooseMood = async parentElement => {
 
 exports.chooseMood = chooseMood;
 
+const defaultPlay = async () => {
+  const tracks = await (0, _genres.data)('nostalgic');
+  const playlist = await (0, _tracks.display)(tracks);
+  await (0, _play.playTrack)(playlist);
+};
+
+exports.defaultPlay = defaultPlay;
+
 },{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/player/play.js":344,"components/player/tracks":347}],341:[function(require,module,exports){
 "use strict";
 
@@ -9240,7 +9276,7 @@ exports.highlight = void 0;
 //for button divs
 const traverseChildren = async htmlCollection => {
   const children = Array.from(htmlCollection.children);
-  return children.map(x => x.style.backgroundColor = '');
+  return children.map(x => x.style.backgroundColor = "");
 }; //dehighlights before hightlight the new element
 
 
@@ -9250,7 +9286,7 @@ const de_highlight = async parent => {
       await traverseChildren(x);
     }
 
-    return x.style.backgroundColor = '';
+    return x.style.backgroundColor = "";
   });
 };
 
@@ -9386,7 +9422,9 @@ exports.display = void 0;
 
 var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 const getTrackElements = async data => {
   try {

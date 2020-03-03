@@ -4,27 +4,30 @@ import { display } from 'components/player/tracks';
 import { playTrack } from 'components/player/play.js';
 import { eventEmitter } from 'components/emitter';
 
-
 //choose the mood
 
 export const chooseMood = async parentElement => {
- 
- const parent = Array.from(parentElement.children);
- const yellow = '#ffdab3';
+	const parent = Array.from(parentElement.children);
+	const yellow = '#ffdab3';
 
- parent.forEach(async(x) => {
-  x.addEventListener('click', async(e) => {
-   await highlight(e,parent, yellow);
-   const mood = e.target.innerHTML;
-   const tracks = await data(mood);
-   
-   //clearing previously displayed tracks if there were any
-   eventEmitter.emit('resetPlaylist');
-   eventEmitter.emit('resetGenre');
+	parent.forEach(async(x) => {
+		x.addEventListener('click', async(e) => {
+			await highlight(e,parent,yellow);
+			const mood = e.target.innerHTML;
+			const tracks = await data(mood);
+			
+			//clearing previously displayed tracks if there were any
+			eventEmitter.emit('resetPlaylist');
+			eventEmitter.emit('resetGenre');
 
-   const playlist = await display(tracks);
-   await playTrack(playlist);
-  });
- });
+			const playlist = await display(tracks);
+			await playTrack(playlist);
+		});
+	});
+};
 
+export const defaultPlay = async () => {
+	const tracks = await data('nostalgic');
+	const playlist = await display(tracks);
+	await playTrack(playlist);
 };
