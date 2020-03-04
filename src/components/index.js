@@ -6,6 +6,6 @@ const json = require('components/moodbox/mood.json');
 export const run = async() => {
 	const buttons = await getButtons(json);
 	const moodbox = await helper.attach(buttons,'.button-list');
-	await defaultPlay();
+	await defaultPlay(moodbox);
 	await chooseMood(moodbox);
 };

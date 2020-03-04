@@ -9052,14 +9052,21 @@ exports.eventEmitter = void 0;
 
 var _reset = require("components/player/reset.js");
 
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
 const events = require('events').EventEmitter;
 
 const eventEmitter = new events.EventEmitter();
 exports.eventEmitter = eventEmitter;
 eventEmitter.on('resetPlaylist', async () => await (0, _reset.resetPlaylist)());
 eventEmitter.on('resetGenre', async () => await (0, _reset.resetGenre)());
+eventEmitter.on('deHighlight', element => helper.de_highlight(element));
 
-},{"components/player/reset.js":345,"events":331}],337:[function(require,module,exports){
+},{"components/player/reset.js":345,"events":331,"utils/helpers.js":348}],337:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9169,7 +9176,7 @@ const json = require('components/moodbox/mood.json');
 const run = async () => {
   const buttons = await (0, _buttons.getButtons)(json);
   const moodbox = await helper.attach(buttons, '.button-list');
-  await (0, _choice.defaultPlay)();
+  await (0, _choice.defaultPlay)(moodbox);
   await (0, _choice.chooseMood)(moodbox);
 };
 
@@ -9235,15 +9242,26 @@ var _play = require("components/player/play.js");
 
 var _emitter = require("components/emitter");
 
-//choose the mood
+var helper = _interopRequireWildcard(require("utils/helpers.js"));
+
+var _mood = _interopRequireDefault(require("components/moodbox/mood"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+const yellow = '#ffdab3';
+const isOnLoad = true;
+
 const chooseMood = async parentElement => {
   const parent = Array.from(parentElement.children);
-  const yellow = '#ffdab3';
   parent.forEach(async x => {
     x.addEventListener('click', async e => {
-      await (0, _highlight.highlight)(e, parent, yellow);
       const mood = e.target.innerHTML;
-      const tracks = await (0, _genres.data)(mood); //clearing previously displayed tracks if there were any
+      const tracks = await (0, _genres.data)(mood);
+      await (0, _highlight.highlight)(mood, parent, yellow, !isOnLoad); //clearing previously displayed tracks if there were any
 
       _emitter.eventEmitter.emit('resetPlaylist');
 
@@ -9257,15 +9275,18 @@ const chooseMood = async parentElement => {
 
 exports.chooseMood = chooseMood;
 
-const defaultPlay = async () => {
-  const tracks = await (0, _genres.data)('nostalgic');
+const defaultPlay = async parentElement => {
+  let random = helper.randomMood(_mood.default);
+  const parent = Array.from(parentElement.children);
+  await (0, _highlight.highlight)(random, parent, yellow, isOnLoad);
+  const tracks = await (0, _genres.data)(random);
   const playlist = await (0, _tracks.display)(tracks);
   await (0, _play.playTrack)(playlist);
 };
 
 exports.defaultPlay = defaultPlay;
 
-},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/player/play.js":344,"components/player/tracks":347}],341:[function(require,module,exports){
+},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/moodbox/mood":342,"components/player/play.js":344,"components/player/tracks":347,"utils/helpers.js":348}],341:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9273,31 +9294,33 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.highlight = void 0;
 
-//for button divs
-const traverseChildren = async htmlCollection => {
-  const children = Array.from(htmlCollection.children);
-  return children.map(x => x.style.backgroundColor = "");
-}; //dehighlights before hightlight the new element
+var _emitter = require("components/emitter");
 
+let currentlyHightlighted;
 
-const de_highlight = async parent => {
-  return parent.map(async x => {
-    if (x.hasChildNodes()) {
-      await traverseChildren(x);
-    }
-
-    return x.style.backgroundColor = "";
-  });
+const findByTargetName = (name, htmlCollection) => {
+  const children = Array.from(htmlCollection);
+  return children.find(x => x.innerText === name).children[0];
 };
 
-const highlight = async (e, parent, colour) => {
-  await de_highlight(parent);
-  e.target.style.backgroundColor = colour;
+const highlight = async (mood, parent, colour, isOnLoad) => {
+  const node = findByTargetName(mood, parent);
+
+  if (isOnLoad) {
+    node.style.backgroundColor = colour;
+    currentlyHightlighted = node;
+  } else {
+    _emitter.eventEmitter.emit('deHighlight', currentlyHightlighted);
+
+    const node = findByTargetName(mood, parent);
+    node.style.backgroundColor = colour;
+    currentlyHightlighted = node;
+  }
 };
 
 exports.highlight = highlight;
 
-},{}],342:[function(require,module,exports){
+},{"components/emitter":336}],342:[function(require,module,exports){
 module.exports={
  "nostalgic": "Blues",
  "romantic": "Jazz",
@@ -9452,17 +9475,34 @@ exports.display = display;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.parse = void 0;
+exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.de_highlight = exports.randomMood = exports.randomInteger = exports.parse = void 0;
 
 require("babel-polyfill");
 
-const parse = async json => JSON.parse(JSON.stringify(json));
+//export const parse = async json => JSON.parse(JSON.stringify(json));
+const parse = json => JSON.parse(JSON.stringify(json));
+
+exports.parse = parse;
+
+const randomInteger = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+exports.randomInteger = randomInteger;
+
+const randomMood = json => {
+  let min = 1;
+  let max = Object.keys(json).length - 1;
+  return Object.keys(json)[randomInteger(min, max)];
+};
+
+exports.randomMood = randomMood;
+
+const de_highlight = async buttonElement => buttonElement.style.backgroundColor = "";
 /**
 creates a single <h1></h1> with following attributes
 */
 
 
-exports.parse = parse;
+exports.de_highlight = de_highlight;
 
 const createTrackElement = async obj => {
   try {
