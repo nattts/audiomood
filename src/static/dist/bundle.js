@@ -9074,30 +9074,26 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.data = exports.createQuery = exports.getGenre = void 0;
 
+var _mood = _interopRequireDefault(require("components/moodbox/mood"));
+
 var helper = _interopRequireWildcard(require("utils/helpers.js"));
 
 var _isomorphicFetch = _interopRequireDefault(require("isomorphic-fetch"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-const json = require('components/moodbox/mood.json');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 //gets the genre according to the chosen mood
-const getGenre = async mood => {
-  try {
-    const moodObj = await helper.parse(json);
-
-    for (let m in moodObj) {
-      if (m === mood) {
-        return moodObj[m];
-      }
+const getGenre = mood => {
+  if (mood) {
+    for (let m in _mood.default) {
+      if (m === mood) return _mood.default[m];
     }
-  } catch (e) {
-    throw new Error('error in getting genre');
+  } else {
+    throw new Error('get genre not working');
   }
 };
 
@@ -9110,7 +9106,7 @@ const createQuery = async e => {
     const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
     return source;
   } catch (e) {
-    throw new Error('error in creating query');
+    throw new Error('error with creating query');
   }
 }; //return a huge json from API request
 
@@ -9146,14 +9142,14 @@ const data = async e => {
       genre: y.genre,
       src: y.stream_url
     }));
-  } catch (e) {
-    throw new Error('error in getting data');
+  } catch (err) {
+    throw new Error(err); //throw new Error('error in getting data');
   }
 };
 
 exports.data = data;
 
-},{"components/moodbox/mood.json":342,"isomorphic-fetch":332,"utils/helpers.js":348}],338:[function(require,module,exports){
+},{"components/moodbox/mood":342,"isomorphic-fetch":332,"utils/helpers.js":348}],338:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9171,13 +9167,23 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-const json = require('components/moodbox/mood.json');
+const json = require('components/moodbox/mood.json'); // export const run = async() => {
+// 	const buttons = await getButtons(json);
+// 	const moodbox = await helper.attach(buttons,'.button-list');
+// 	await defaultPlay(moodbox);
+// 	await chooseMood(moodbox);
+// };
 
-const run = async () => {
-  const buttons = await (0, _buttons.getButtons)(json);
-  const moodbox = await helper.attach(buttons, '.button-list');
-  await (0, _choice.defaultPlay)(moodbox);
-  await (0, _choice.chooseMood)(moodbox);
+
+const run = () => {
+  try {
+    const buttons = (0, _buttons.getButtons)(json);
+    const moodbox = helper.attach(buttons, '.button-list');
+    (0, _choice.defaultPlay)(moodbox);
+    (0, _choice.chooseMood)(moodbox);
+  } catch (e) {
+    throw new Error(e);
+  }
 };
 
 exports.run = run;
@@ -9196,29 +9202,19 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-//return array of moods from mood object parsed from json
-const moods = async json => {
-  try {
-    const moodObj = await helper.parse(json);
-    return Object.keys(moodObj);
-  } catch (e) {
-    throw new Error('error in getting array of moods');
-  }
-};
 /**
 
 takes in JSON with mood/genre pairs, creates array from moods,
 which gets passed to Batch and return an array of created HTML elements
 
 */
-
-
-const getButtons = async json => {
-  try {
-    const moodsArray = await moods(json);
-    return await helper.elementBatch(moodsArray, helper.createButton);
-  } catch (e) {
-    throw new Error('error in getdButtons');
+const getButtons = json => {
+  if (!Object.keys(json).length) {
+    confirm('come back later');
+    throw new Error('error with json');
+  } else {
+    const moodsArray = Object.keys(json);
+    return helper.elementBatch(moodsArray, helper.createButton);
   }
 };
 
@@ -9322,20 +9318,20 @@ exports.highlight = highlight;
 
 },{"components/emitter":336}],342:[function(require,module,exports){
 module.exports={
- "nostalgic": "Blues",
- "romantic": "Jazz",
- "euphoric": "Breakbeat",
- "energetic": "Techno",
- "calm": "Ambient",
- "angry": "Industrial",
- "relaxed": "Acoustic",
- "happy": "Jungle",
- "focused": "House",
- "ecstatic": "Psytrance",
- "impulsive": "Disco",
- "comfortable": "Classical"
-
+//  "nostalgic": "Blues",
+//  "romantic": "Jazz",
+//  "euphoric": "Breakbeat",
+//  "energetic": "Techno",
+//  "calm": "Ambient",
+//  "angry": "Industrial",
+//  "relaxed": "Acoustic",
+//  "happy": "Jungle",
+//  "focused": "House",
+//  "ecstatic": "Psytrance",
+//  "impulsive": "Disco",
+//  "comfortable": "Classical"
 }
+
 },{}],343:[function(require,module,exports){
 "use strict";
 
@@ -9475,15 +9471,11 @@ exports.display = display;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.de_highlight = exports.randomMood = exports.randomInteger = exports.parse = void 0;
+exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.de_highlight = exports.randomMood = exports.randomInteger = void 0;
 
 require("babel-polyfill");
 
-//export const parse = async json => JSON.parse(JSON.stringify(json));
-const parse = json => JSON.parse(JSON.stringify(json));
-
-exports.parse = parse;
-
+//export const parse = json => JSON.parse(JSON.stringify(json));
 const randomInteger = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 exports.randomInteger = randomInteger;
@@ -9504,7 +9496,7 @@ creates a single <h1></h1> with following attributes
 
 exports.de_highlight = de_highlight;
 
-const createTrackElement = async obj => {
+const createTrackElement = obj => {
   try {
     let {
       title,
@@ -9530,7 +9522,7 @@ const createTrackElement = async obj => {
 
 exports.createTrackElement = createTrackElement;
 
-const createButton = async name => {
+const createButton = name => {
   try {
     const div = document.createElement('div');
     const button = document.createElement('BUTTON');
@@ -9542,16 +9534,15 @@ const createButton = async name => {
   } catch (e) {
     throw new Error('error in createButton');
   }
-}; //returns array of divs
-
+};
 
 exports.createButton = createButton;
 
-const elementBatch = async (arr, cb) => {
+const elementBatch = (arr, cb) => {
   try {
-    return Promise.all(arr.map(async x => {
-      return await cb(x);
-    }));
+    return arr.map(x => {
+      return cb(x);
+    });
   } catch (e) {
     throw new Error('error in elementBatch');
   }
@@ -9560,11 +9551,11 @@ const elementBatch = async (arr, cb) => {
 
 exports.elementBatch = elementBatch;
 
-const attach = async (elementsArr, parentElement) => {
+const attach = (elementsArr, parentElement) => {
   try {
     const parent = document.querySelector(`${parentElement}`);
-    elementsArr.forEach(async item => {
-      parent.appendChild((await item));
+    elementsArr.forEach(item => {
+      parent.appendChild(item);
     });
     return parent;
   } catch (e) {

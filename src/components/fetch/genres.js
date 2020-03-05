@@ -1,20 +1,17 @@
-const json = require('components/moodbox/mood.json');
+import json from 'components/moodbox/mood';
 import * as helper from 'utils/helpers.js';
 import fetch from 'isomorphic-fetch';
 
 //gets the genre according to the chosen mood
-export const getGenre = async mood => {
-	try {
-		const moodObj = await helper.parse(json);
-		for (let m in moodObj) {
-			if (m === mood) {
-				return moodObj[m];
-			}
+export const getGenre = mood => {
+	if (mood) {
+		for (let m in json) {
+			if (m === mood) return json[m];
 		}
+	} else {
+		throw new Error('get genre not working');
 	}
-	catch(e){ throw new Error('error in getting genre');}
 };
-
 
 export const createQuery = async e => {
 	try {
@@ -23,7 +20,7 @@ export const createQuery = async e => {
 		const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
 		return source; 
 	}
-	catch(e){ throw new Error('error in creating query');}
+	catch(e){ throw new Error('error with creating query');}
 };
 
 
@@ -61,7 +58,10 @@ export const data = async e => {
 		})
 		);
 	}
-	catch(e){ throw new Error('error in getting data');}
+	catch(err){
+		throw new Error(err) 
+		//throw new Error('error in getting data');
+	}
 };
 
 
