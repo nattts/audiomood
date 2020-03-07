@@ -9040,9 +9040,13 @@ module.exports = self.fetch.bind(self);
 
 var _index = require("components/index.js");
 
-(0, _index.run)();
+var _mood = _interopRequireDefault(require("components/moodbox/mood"));
 
-},{"components/index.js":338}],336:[function(require,module,exports){
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+(0, _index.run)(_mood.default);
+
+},{"components/index.js":338,"components/moodbox/mood":342}],336:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9052,104 +9056,83 @@ exports.eventEmitter = void 0;
 
 var _reset = require("components/player/reset.js");
 
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
 const events = require('events').EventEmitter;
 
 const eventEmitter = new events.EventEmitter();
 exports.eventEmitter = eventEmitter;
-eventEmitter.on('resetPlaylist', async () => await (0, _reset.resetPlaylist)());
-eventEmitter.on('resetGenre', async () => await (0, _reset.resetGenre)());
-eventEmitter.on('deHighlight', element => helper.de_highlight(element));
+eventEmitter.on('resetPlaylist', () => (0, _reset.resetPlaylist)());
+eventEmitter.on('resetGenre', () => (0, _reset.resetGenre)());
+eventEmitter.on('deHighlight', element => element.style.backgroundColor = "");
 
-},{"components/player/reset.js":345,"events":331,"utils/helpers.js":348}],337:[function(require,module,exports){
+},{"components/player/reset.js":344,"events":331}],337:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.data = exports.createQuery = exports.getGenre = void 0;
+exports.data = void 0;
 
 var _mood = _interopRequireDefault(require("components/moodbox/mood"));
 
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
-
 var _isomorphicFetch = _interopRequireDefault(require("isomorphic-fetch"));
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 //gets the genre according to the chosen mood
 const getGenre = mood => {
-  if (mood) {
-    for (let m in _mood.default) {
-      if (m === mood) return _mood.default[m];
-    }
-  } else {
-    throw new Error('get genre not working');
+  if (!mood) throw new Error('cannot get genre.');
+
+  for (let m in _mood.default) {
+    if (m === mood) return _mood.default[m];
   }
 };
 
-exports.getGenre = getGenre;
-
-const createQuery = async e => {
-  try {
-    const genre = await getGenre(e);
-    const count = 10;
-    const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
-    return source;
-  } catch (e) {
-    throw new Error('error with creating query');
-  }
+const createQuery = mood => {
+  if (!mood) throw new Error('cannot create query.');
+  const genre = getGenre(mood);
+  const count = 10;
+  const source = `https://api-v2.hearthis.at/categories/${genre}/?page=1&count=${count}`;
+  return source;
 }; //return a huge json from API request
 
 
-exports.createQuery = createQuery;
+const fetcher = mood => {
+  if (!mood) throw new Error('fetching failed. argument is not provided');
+  const query = createQuery(mood);
+  return new Promise((resolve, reject) => {
+    return (0, _isomorphicFetch.default)(query).then(response => {
+      if (response) resolve(response);
+      reject(new Error('cant fetch'));
+    });
+  });
+}; //return exactly 7 entries & gets back needed entries
 
-const fetcher = async e => {
+
+const cutDownByNumber = fetchedJson => {
+  if (!Array.isArray(fetchedJson) || !fetchedJson.length) throw new Error('no json provided ');
+  const entriesToFetch = 7;
+  return fetchedJson.filter((entries, index) => index < entriesToFetch).reduce((acc, obj) => {
+    let o = {};
+    o['title'] = obj.title;
+    o['genre'] = obj.genre;
+    o['src'] = obj.stream_url;
+    acc.push(o);
+    return acc;
+  }, []);
+}; //return sorted array of objects
+
+
+const data = mood => {
   try {
-    const query = await createQuery(e);
-    const fetched = await (0, _isomorphicFetch.default)(query);
-    return await fetched.json();
-  } catch (e) {
-    throw new Error('error with fetching');
-  }
-};
-
-const filterByNumber = async (e, number) => {
-  try {
-    const json = await fetcher(e);
-    return json.filter((x, i) => i < number);
-  } catch (e) {
-    throw new Error('error in filtering');
-  }
-}; //return exactly 7 entries
-
-
-const data = async e => {
-  try {
-    const entriesToFetch = 7;
-    const filtered = await filterByNumber(e, entriesToFetch);
-    return filtered.map(y => ({
-      title: y.title,
-      genre: y.genre,
-      src: y.stream_url
-    }));
+    return fetcher(mood).then(result => result.json()).then(j => cutDownByNumber(j)).catch(err => console.log(' promise catcher', err));
   } catch (err) {
-    throw new Error(err); //throw new Error('error in getting data');
+    console.log(err);
   }
 };
 
 exports.data = data;
 
-},{"components/moodbox/mood":342,"isomorphic-fetch":332,"utils/helpers.js":348}],338:[function(require,module,exports){
+},{"components/moodbox/mood":342,"isomorphic-fetch":332}],338:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9157,30 +9140,26 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.run = void 0;
 
-var _buttons = require("components/moodbox/buttons.js");
+var _buttons = require("components/moodbox/buttons");
 
-var _choice = require("components/moodbox/choice.js");
+var _choice = require("components/moodbox/choice");
 
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
+var helper = _interopRequireWildcard(require("utils/helpers"));
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-const json = require('components/moodbox/mood.json'); // export const run = async() => {
-// 	const buttons = await getButtons(json);
-// 	const moodbox = await helper.attach(buttons,'.button-list');
-// 	await defaultPlay(moodbox);
-// 	await chooseMood(moodbox);
-// };
+const run = json => {
+  if (!Object.keys(json).length || Object.keys(json).some(e => e === "") || Object.values(json).some(e => e === "")) {
+    confirm('come back later');
+    throw new Error('error with json');
+  }
 
-
-const run = () => {
   try {
     const buttons = (0, _buttons.getButtons)(json);
     const moodbox = helper.attach(buttons, '.button-list');
-    (0, _choice.defaultPlay)(moodbox);
-    (0, _choice.chooseMood)(moodbox);
+    (0, _choice.play)(moodbox, json);
   } catch (e) {
     throw new Error(e);
   }
@@ -9188,7 +9167,7 @@ const run = () => {
 
 exports.run = run;
 
-},{"components/moodbox/buttons.js":339,"components/moodbox/choice.js":340,"components/moodbox/mood.json":342,"utils/helpers.js":348}],339:[function(require,module,exports){
+},{"components/moodbox/buttons":339,"components/moodbox/choice":340,"utils/helpers":345}],339:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9203,86 +9182,84 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 /**
-
 takes in JSON with mood/genre pairs, creates array from moods,
 which gets passed to Batch and return an array of created HTML elements
-
 */
 const getButtons = json => {
-  if (!Object.keys(json).length) {
-    confirm('come back later');
-    throw new Error('error with json');
-  } else {
-    const moodsArray = Object.keys(json);
-    return helper.elementBatch(moodsArray, helper.createButton);
-  }
+  if (!json || json === null) throw new Error('error with json');
+  const moodsArray = Object.keys(json);
+  return helper.elementBatch(moodsArray, helper.createButton);
 };
 
 exports.getButtons = getButtons;
 
-},{"utils/helpers.js":348}],340:[function(require,module,exports){
+},{"utils/helpers.js":345}],340:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.defaultPlay = exports.chooseMood = void 0;
+exports.play = void 0;
 
 var _highlight = require("./highlight.js");
 
 var _genres = require("components/fetch/genres.js");
 
-var _tracks = require("components/player/tracks");
-
 var _play = require("components/player/play.js");
 
 var _emitter = require("components/emitter");
 
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
-
-var _mood = _interopRequireDefault(require("components/moodbox/mood"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var h = _interopRequireWildcard(require("utils/helpers.js"));
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+//import { display } from 'components/player/tracks';
 const yellow = '#ffdab3';
 const isOnLoad = true;
 
-const chooseMood = async parentElement => {
-  const parent = Array.from(parentElement.children);
-  parent.forEach(async x => {
-    x.addEventListener('click', async e => {
+const collectAndDisplay = mood => {
+  if (!mood || typeof mood !== 'string') throw new Error('argument must be a valid string');
+  return (0, _genres.data)(mood).then(tracks => h.display(tracks)).then(playlist => (0, _play.playTrack)(playlist)).catch(err => console.log(err));
+};
+
+const defaultPlay = (parent, json) => {
+  if (!parent || !json) throw new Error('argument must be the right format');
+  const random = h.randomMood(json);
+  (0, _highlight.highlight)(random, parent, yellow, isOnLoad);
+  collectAndDisplay(random);
+};
+
+const chooseMood = parent => {
+  if (parent === null || !parent.length || !Array.isArray(parent)) throw new Error('arg must be an array containing div elements');
+  parent.forEach(btn => {
+    btn.addEventListener('click', e => {
       const mood = e.target.innerHTML;
-      const tracks = await (0, _genres.data)(mood);
-      await (0, _highlight.highlight)(mood, parent, yellow, !isOnLoad); //clearing previously displayed tracks if there were any
+      (0, _highlight.highlight)(mood, parent, yellow, !isOnLoad);
 
       _emitter.eventEmitter.emit('resetPlaylist');
 
       _emitter.eventEmitter.emit('resetGenre');
 
-      const playlist = await (0, _tracks.display)(tracks);
-      await (0, _play.playTrack)(playlist);
+      collectAndDisplay(mood);
     });
   });
 };
 
-exports.chooseMood = chooseMood;
-
-const defaultPlay = async parentElement => {
-  let random = helper.randomMood(_mood.default);
-  const parent = Array.from(parentElement.children);
-  await (0, _highlight.highlight)(random, parent, yellow, isOnLoad);
-  const tracks = await (0, _genres.data)(random);
-  const playlist = await (0, _tracks.display)(tracks);
-  await (0, _play.playTrack)(playlist);
+const play = (parentElement, json) => {
+  try {
+    const parent = Array.from(parentElement.children);
+    defaultPlay(parent, json);
+    chooseMood(parent);
+  } catch (err) {
+    console.log('module catch', err);
+  }
 };
 
-exports.defaultPlay = defaultPlay;
+exports.play = play;
 
-},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/moodbox/mood":342,"components/player/play.js":344,"components/player/tracks":347,"utils/helpers.js":348}],341:[function(require,module,exports){
+},{"./highlight.js":341,"components/emitter":336,"components/fetch/genres.js":337,"components/player/play.js":343,"utils/helpers.js":345}],341:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9296,10 +9273,13 @@ let currentlyHightlighted;
 
 const findByTargetName = (name, htmlCollection) => {
   const children = Array.from(htmlCollection);
-  return children.find(x => x.innerText === name).children[0];
+
+  if (children.length) {
+    return children.find(x => x.innerText === name).children[0];
+  }
 };
 
-const highlight = async (mood, parent, colour, isOnLoad) => {
+const highlight = (mood, parent, colour, isOnLoad) => {
   const node = findByTargetName(mood, parent);
 
   if (isOnLoad) {
@@ -9318,19 +9298,19 @@ exports.highlight = highlight;
 
 },{"components/emitter":336}],342:[function(require,module,exports){
 module.exports={
-//  "nostalgic": "Blues",
-//  "romantic": "Jazz",
-//  "euphoric": "Breakbeat",
-//  "energetic": "Techno",
-//  "calm": "Ambient",
-//  "angry": "Industrial",
-//  "relaxed": "Acoustic",
-//  "happy": "Jungle",
-//  "focused": "House",
-//  "ecstatic": "Psytrance",
-//  "impulsive": "Disco",
-//  "comfortable": "Classical"
-}
+    "nostalgic": "Blues",
+    "romantic": "Jazz",
+    "euphoric": "Breakbeat",
+    "energetic": "Techno",
+    "calm": "Ambient",
+    "angry": "Industrial",
+    "relaxed": "Acoustic",
+    "happy": "Jungle",
+    "focused": "House",
+    "ecstatic": "Psytrance",
+    "impulsive": "Disco",
+    "comfortable": "Classical"
+   }
 
 },{}],343:[function(require,module,exports){
 "use strict";
@@ -9338,49 +9318,71 @@ module.exports={
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.genre_info = void 0;
+exports.playTrack = exports.genre_info = void 0;
 
-//takes genre info stored on the track element and 
+var _emitter = require("components/emitter");
+
+let currentlyHightlighted = ""; //takes genre info stored on the track element and 
 //displays currently played genre above the tracks
-const genre_info = async e => {
+
+const genre_info = e => {
   const genre_info = document.querySelector('.genre-info');
   const genre = e.target.getAttribute('data-genre');
   genre_info.innerHTML = genre;
-};
+}; //src is taken from the clicked element and passed to the audio element
+
 
 exports.genre_info = genre_info;
 
-},{}],344:[function(require,module,exports){
-"use strict";
+const selectTrack = e => {
+  const audio = document.querySelector('.audio');
+  const src = e.target.getAttribute('data-src');
+  audio.setAttribute('src', src);
+};
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.playTrack = void 0;
+const highlightTrack = (target, colour) => {
+  if (!target || !colour) throw new Error();
+  target.style.backgroundColor = colour;
+};
+/**
+ current playlist div element is passed in.
+ @param {playlistDiv}: HTML Element
+*/
 
-var _highlight = require("components/moodbox/highlight.js");
 
-var _selectTrack = require("./selectTrack.js");
+const playTrack = playlistDiv => {
+  try {
+    if (!playlistDiv || playlistDiv instanceof HTMLElement === false) {
+      throw new Error('arg must be a DIV');
+    }
 
-var _genreInfo = require("./genreInfo.js");
+    const playlist = Array.from(playlistDiv.children);
+    const lightblue = '#e6f8fe'; //click event on every child (track)
 
-//current playlist div element is passed in.
-const playTrack = async playlistDiv => {
-  const playlist = Array.from(playlistDiv.children);
-  const lightblue = '#e6f8fe'; //click event on every child
+    playlist.forEach(x => {
+      x.addEventListener('click', e => {
+        selectTrack(e);
 
-  playlist.forEach(x => {
-    x.addEventListener('click', async e => {
-      await (0, _selectTrack.selectTrack)(e);
-      await (0, _highlight.highlight)(e, playlist, lightblue);
-      await (0, _genreInfo.genre_info)(e);
+        if (currentlyHightlighted) {
+          _emitter.eventEmitter.emit('deHighlight', currentlyHightlighted);
+
+          highlightTrack(e.target, lightblue);
+          currentlyHightlighted = e.target;
+        } else {
+          highlightTrack(e.target, lightblue);
+          genre_info(e);
+          currentlyHightlighted = e.target;
+        }
+      });
     });
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 exports.playTrack = playTrack;
 
-},{"./genreInfo.js":343,"./selectTrack.js":346,"components/moodbox/highlight.js":341}],345:[function(require,module,exports){
+},{"components/emitter":336}],344:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9388,134 +9390,71 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.resetGenre = exports.resetPlaylist = void 0;
 
-const resetPlaylist = async () => {
-  try {
-    const playlist = document.querySelector('.playlist');
+const resetPlaylist = () => {
+  const playlist = document.querySelector('.playlist');
 
-    if (playlist.hasChildNodes()) {
-      Array.from(playlist.childNodes).forEach(item => item.parentNode.removeChild(item));
-    }
-  } catch (e) {
-    throw new Error('error in resetPlaylist');
+  if (playlist.hasChildNodes()) {
+    Array.from(playlist.childNodes).forEach(item => item.parentNode.removeChild(item));
   }
 };
 
 exports.resetPlaylist = resetPlaylist;
 
-const resetGenre = async () => {
-  try {
-    const info = document.querySelector('.genre-info');
-    info.innerHTML = '';
-  } catch (e) {
-    throw new Error('error in resetting genre');
-  }
+const resetGenre = () => {
+  const info = document.querySelector('.genre-info');
+  info.innerHTML = '';
 };
 
 exports.resetGenre = resetGenre;
 
-},{}],346:[function(require,module,exports){
+},{}],345:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.selectTrack = void 0;
-
-//src is taken from the clicked element and passed to the audio element
-// to play the chosen track.
-const selectTrack = async e => {
-  const audio = document.querySelector('.audio');
-  let src = e.target.getAttribute('data-src');
-  audio.setAttribute('src', src);
-};
-
-exports.selectTrack = selectTrack;
-
-},{}],347:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.display = void 0;
-
-var helper = _interopRequireWildcard(require("utils/helpers.js"));
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-const getTrackElements = async data => {
-  try {
-    let batch = await helper.elementBatch(data, helper.createTrackElement);
-    return batch;
-  } catch (e) {
-    throw new Error('error in getting track elements');
-  }
-};
-
-const display = async data => {
-  try {
-    let divsArr = await getTrackElements(data);
-    return await helper.attach(divsArr, '.playlist');
-  } catch (e) {
-    throw new Error('error in displaying tracks');
-  }
-};
-
-exports.display = display;
-
-},{"utils/helpers.js":348}],348:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.de_highlight = exports.randomMood = exports.randomInteger = void 0;
+exports.display = exports.attach = exports.elementBatch = exports.createButton = exports.createTrackElement = exports.randomMood = exports.randomInteger = void 0;
 
 require("babel-polyfill");
 
-//export const parse = json => JSON.parse(JSON.stringify(json));
 const randomInteger = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 exports.randomInteger = randomInteger;
 
 const randomMood = json => {
-  let min = 1;
-  let max = Object.keys(json).length - 1;
-  return Object.keys(json)[randomInteger(min, max)];
+  if (json) {
+    let min = 1;
+    let max = Object.keys(json).length - 1;
+    return Object.keys(json)[randomInteger(min, max)];
+  }
 };
-
-exports.randomMood = randomMood;
-
-const de_highlight = async buttonElement => buttonElement.style.backgroundColor = "";
 /**
 creates a single <h1></h1> with following attributes
 */
 
 
-exports.de_highlight = de_highlight;
+exports.randomMood = randomMood;
 
 const createTrackElement = obj => {
-  try {
-    let {
-      title,
-      genre,
-      src
-    } = obj;
-    const h1 = document.createElement('h1');
-    h1.className = 'track';
-    h1.innerHTML = `${title}`;
-    h1.setAttribute('data-src', `${src}`);
-    h1.setAttribute('data-genre', `${genre}`);
-    h1.setAttribute('style', 'background-color: ');
-    return h1;
-  } catch (e) {
-    throw new Error('error in createTrackElement');
+  if (!Object.keys(obj).length || !Object.values(obj).length) {
+    throw new Error('error @createTrackElement() ');
   }
+
+  let {
+    title,
+    genre,
+    src
+  } = obj;
+  const h1 = document.createElement('h1');
+  h1.className = 'track';
+  h1.innerHTML = `${title}`;
+  h1.setAttribute('data-src', `${src}`);
+  h1.setAttribute('data-genre', `${genre}`);
+  h1.setAttribute('style', 'background-color: ');
+  return h1;
 };
 /**
- creates a single button within a div
+ dynamically creates a single button within a div
  @param {name}: name of the genre
 */
 
@@ -9523,46 +9462,56 @@ const createTrackElement = obj => {
 exports.createTrackElement = createTrackElement;
 
 const createButton = name => {
-  try {
-    const div = document.createElement('div');
-    const button = document.createElement('BUTTON');
-    button.className = 'btn btn-outline-secondary';
-    button.setAttribute('style', 'background-color: ');
-    button.innerHTML = `${name}`;
-    div.appendChild(button);
-    return div;
-  } catch (e) {
-    throw new Error('error in createButton');
+  if (!name || typeof name !== 'string') {
+    throw new Error('argument must not be empty and be a valid string @createButton() ');
   }
+
+  const div = document.createElement('div');
+  const button = document.createElement('BUTTON');
+  button.className = 'btn btn-outline-secondary';
+  button.setAttribute('style', 'background-color: ');
+  button.innerHTML = `${name}`;
+  div.appendChild(button);
+  return div;
 };
+/**
+returns array of button elements 
+@param {arr}: array of moods
+@param {cb}: function creteButton
+*/
+
 
 exports.createButton = createButton;
 
-const elementBatch = (arr, cb) => {
-  try {
-    return arr.map(x => {
-      return cb(x);
-    });
-  } catch (e) {
-    throw new Error('error in elementBatch');
+const elementBatch = (moodArray, cb) => {
+  if (moodArray === undefined || !moodArray.length || typeof cb !== 'function') {
+    throw new Error('illegal argument: args must be a non-empty array and a callback function @elementBatch()');
   }
-}; //to attach elements to the paren element in the DOM
+
+  return moodArray.map(moodName => cb(moodName));
+}; //to attach elements to the parent element in the DOM
 
 
 exports.elementBatch = elementBatch;
 
-const attach = (elementsArr, parentElement) => {
-  try {
-    const parent = document.querySelector(`${parentElement}`);
-    elementsArr.forEach(item => {
-      parent.appendChild(item);
-    });
-    return parent;
-  } catch (e) {
-    throw new Error('error in attach');
+const attach = (elementsArr, parentDOMelement) => {
+  if (!elementsArr.length) {
+    throw new Error('error @attach()');
   }
+
+  const parent = document.querySelector(`${parentDOMelement}`);
+  elementsArr.forEach(item => parent.appendChild(item));
+  return parent;
 };
 
 exports.attach = attach;
+
+const display = data => {
+  if (!data.length || !Array.isArray(data)) throw new Error('arg must be non empty array');
+  let batch = elementBatch(data, createTrackElement);
+  return attach(batch, '.playlist');
+};
+
+exports.display = display;
 
 },{"babel-polyfill":1}]},{},[335]);

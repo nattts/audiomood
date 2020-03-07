@@ -1,5 +1,7 @@
 import { run } from 'components/index.js';
-run();
+import json from 'components/moodbox/mood';
+
+run(json);
 
 
 

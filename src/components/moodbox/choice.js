@@ -1,40 +1,49 @@
 import { highlight } from './highlight.js';
 import { data } from 'components/fetch/genres.js';
-import { display } from 'components/player/tracks';
+//import { display } from 'components/player/tracks';
 import { playTrack } from 'components/player/play.js';
 import { eventEmitter } from 'components/emitter';
-import * as helper from 'utils/helpers.js';
-import json from 'components/moodbox/mood';
+import * as h from 'utils/helpers.js';
 
 const yellow = '#ffdab3';
 const isOnLoad = true;
 
-export const chooseMood = async parentElement => {
-	const parent = Array.from(parentElement.children);
-
-	parent.forEach(async(x) => {
-		x.addEventListener('click', async(e) => {
-			const mood = e.target.innerHTML;
-			const tracks = await data(mood);
-			await highlight(mood, parent, yellow, !isOnLoad);
-			
-			//clearing previously displayed tracks if there were any
-			eventEmitter.emit('resetPlaylist');
-			eventEmitter.emit('resetGenre');
-
-			const playlist = await display(tracks);
-			await playTrack(playlist);
-		});
-	});
+const collectAndDisplay = mood => {
+	if (!mood || typeof mood !== 'string') throw new Error('argument must be a valid string');
+	return data(mood)
+		.then(tracks => h.display(tracks))
+		.then(playlist => playTrack(playlist))
+		.catch(err => console.log(err));
 };
 
+const defaultPlay = (parent,json) => {
+	if (!parent || !json) throw new Error('argument must be the right format');
+	const random = h.randomMood(json);
+	highlight(random, parent, yellow, isOnLoad);
+	collectAndDisplay(random);
+};
 
-export const defaultPlay = async (parentElement) => {
-	let random = helper.randomMood(json);
-	const parent = Array.from(parentElement.children);
-	await highlight(random, parent, yellow, isOnLoad);
-	const tracks = await data(random);
-	const playlist = await display(tracks);
-	await playTrack(playlist);
+const chooseMood = parent => {
+	if (parent === null || !parent.length || !Array.isArray(parent) ) throw new Error('arg must be an array containing div elements'); 
+	parent.forEach((btn) => {
+		btn.addEventListener('click', (e) => {
+			const mood = e.target.innerHTML;
+			highlight(mood, parent, yellow, !isOnLoad);
+			eventEmitter.emit('resetPlaylist');
+			eventEmitter.emit('resetGenre');
+			collectAndDisplay(mood);
+		});
+	});
+
+};
+
+export const play = (parentElement,json) => {
+	try {
+		const parent = Array.from(parentElement.children);
+		defaultPlay(parent,json);
+		chooseMood(parent);
+	} catch(err) {
+		console.log('module catch', err);
+	}
 };
 
